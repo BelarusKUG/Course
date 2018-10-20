@@ -5,6 +5,7 @@ Courses:
 1. [Udemy Kotlin Course](https://www.udemy.com/kotlin-course/)
 1. [Introduction to Kotlin Programming](http://shop.oreilly.com/product/0636920052982.do)
 1. [Advanced Kotlin Programming](http://shop.oreilly.com/product/0636920052999.do)
+1. [Atomic Kotlin on Stepik](https://stepik.org/course/15001/syllabus)
 
 Books:
 
