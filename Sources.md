@@ -11,3 +11,7 @@ Books:
 
 1. [Kotlin in Action](https://www.manning.com/books/kotlin-in-action)
 2. [Kotlin for Android Developers](https://leanpub.com/kotlin-for-android-developers)
+
+Potential Mentors and Speakers:
+
+1. Артур Дрёмов
