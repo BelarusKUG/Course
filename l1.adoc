@@ -1,0 +1,22 @@
+
+=== 1. Вводная
+
+* Знакомство с командой
+* История языка
+* Tooling для разработки
+* Kotlin Education Plugin
+* Kotlin/JVM, Kotlin/JS, Kotlin/Native
+* Возможности совмещения языков (JVM + Kotlin, JS + Kotlin &amp; etc)
+* Поддерживаемые идиомы программирования
+* https://kotlinlang.org/docs/reference/coding-conventions.html[Kotlin Coding Conventions]
+* Базовый синтаксис
+** Базовые типы
+** Объявление переменных
+** Null safety
+** Type Inference (Выведение типов)
+** Массивы и коллекции
+** Объявление функций
+** Extension функции
+** If, when, циклы
+** Обработка исключений
+* Литература

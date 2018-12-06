@@ -1,0 +1,8 @@
+
+=== 8. Обратная совместимость с Java
+
+* Kotlin < - > JVM interoperability
+* Написание Kotlin кода для удобного использования из Java
+* Написание Java кода для удобного использования из Kotlin
+* Отличия Kotlin от Java
+* Kotlin Java Bytecode IDEA Plugin

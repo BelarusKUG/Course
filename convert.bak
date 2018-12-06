@@ -1,0 +1,1811 @@
+<!--# Classes and Inheritance-->
+# Классы и наследование
+
+<!--## Classes-->
+## Классы
+
+<!--Classes in Kotlin are declared using the keyword **class**:-->
+Классы в <b>Kotlin</b> объявляются с помощью использования ключевого слова **class**:
+
+``` kotlin
+class Invoice {
+}
+```
+
+<!--The class declaration consists of the class name, the class header (specifying its type parameters, the primary
+constructor etc.) and the class body, surrounded by curly braces. Both the header and the body are optional;
+if the class has no body, curly braces can be omitted.-->
+Объявление класса состоит из имени класса, заголовка (указания типов его параметров, первичного конструктора и т.п) и тела класса,
+заключённого в фигурные скобки. И заголовок, и тело класса являются необязательными составляющими: если у класса нет тела, фигурные скобки могут быть опущены.
+
+``` kotlin
+class Empty
+```
+
+<a name="constructors"></a>
+
+<!--### Constructors-->
+### Конструкторы
+
+<!--A class in Kotlin can have a **primary constructor** and one or more **secondary constructors**. The primary
+constructor is part of the class header: it goes after the class name (and optional type parameters).-->
+Класс в <b>Kotlin</b> может иметь первичный конструктор (**primary constructor**) и один или более вторичных конструкторов (**secondary constructors**). Первичный конструктор является частью заголовка класса, его объявление идёт сразу после имени класса (и необязательных параметров):
+
+``` kotlin
+class Person constructor(firstName: String)
+```
+
+<!--If the primary constructor does not have any annotations or visibility modifiers, the **constructor**
+keyword can be omitted:-->
+Если у конструктора нет аннотаций и модификаторов видимости, ключевое слово **constructor** может быть опущено:
+
+``` kotlin
+class Person(firstName: String)
+```
+
+<!--The primary constructor cannot contain any code. Initialization code can be placed
+in **initializer blocks**, which are prefixed with the **init**keyword:-->
+Первичный конструктор не может содержать в себе исполняемого кода. Инициализирующий код может быть помещён в соответствующий блок (**initializers blocks**), который помечается словом **init**:
+
+
+``` kotlin
+class Customer(name: String) {
+    init {
+        logger.info("Customer initialized with value ${name}")
+    }
+}
+```
+
+<!--Note that parameters of the primary constructor can be used in the initializer blocks. They can also be used in
+property initializers declared in the class body:-->
+Обратите внимание, что параметры первичного конструктора могут быть использованы в инициализирующем блоке. Они также могут быть использованы при инициализации свойств в теле класса:
+
+``` kotlin
+class Customer(name: String) {
+    val customerKey = name.toUpperCase()
+}
+```
+
+<!--In fact, for declaring properties and initializing them from the primary constructor, Kotlin has a concise syntax:-->
+В действительности, для объявления и инициализации свойств первичного конструктора в <b>Kotlin</b> есть лаконичное синтаксическое решение:
+
+``` kotlin
+class Person(val firstName: String, val lastName: String, var age: Int) {
+  // ...
+}
+```
+
+<!--Much the same way as regular properties, the properties declared in the primary constructor can be
+mutable (**var**) or read-only (**val**).-->
+Свойства, объявленные в первичном конструкторе, могут быть изменяемые (**var**) и неизменяемые (**val**). 
+
+<!--If the constructor has annotations or visibility modifiers, the **constructor** keyword is required, and
+the modifiers go before it:-->
+Если у конструктора есть аннотации или модификаторы видимости, ключевое слово **constructor** обязательно, и модификаторы используются перед ним:
+
+``` kotlin
+class Customer public @Inject constructor(name: String) { ... }
+```
+
+<!--For more details, see [Visibility Modifiers](visibility-modifiers.html#constructors).-->
+Для более подробной информации по данному вопросу см. ["Модификаторы доступа"](visibility-modifiers.html#constructors).
+
+<!--#### Secondary Constructors-->
+#### Второстепенные конструкторы 
+
+<!--The class can also declare **secondary constructors**, which are prefixed with **constructor**:-->
+В классах также могут быть объявлены дополнительные конструкторы (**secondary constructors**), перед которыми используется ключевое слово **constructor**:
+
+``` kotlin
+class Person {
+    constructor(parent: Person) {
+        parent.children.add(this)
+    }
+}
+```
+
+<!--If the class has a primary constructor, each secondary constructor needs to delegate to the primary constructor, either
+directly or indirectly through another secondary constructor(s). Delegation to another constructor of the same class
+is done using the **this** keyword:-->
+Если у класса есть главный (первичный) конструктор, каждый последующий конструктор должен прямо или косвенно ссылаться (через другой(_ие_) конструктор(_ы_)) на первичный:
+
+``` kotlin
+class Person(val name: String) {
+    constructor(name: String, parent: Person) : this(name) {
+        parent.children.add(this)
+    }
+}
+```
+
+<!--If a non-abstract class does not declare any constructors (primary or secondary), it will have a generated primary
+constructor with no arguments. The visibility of the constructor will be public. If you do not want your class
+to have a public constructor, you need to declare an empty primary constructor with non-default visibility:-->
+Если в абстрактном классе не объявлено никаких конструкторов (первичных или второстепенных), у этого класса автоматически сгенерируется пустой конструктор без параметров. Видимость этого конструктора будет **public**. Если вы не желаете иметь класс с открытым **public** конструктором, вам необходимо объявить пустой конструктор с соответствующим модификатором видимости:
+
+``` kotlin
+class DontCreateMe private constructor () {
+}
+```
+>
+ **Примечание**: В виртуальной машине JVM компилятор генерирует дополнительный конструктор без параметров в случае, если все параметры первичного конструктора имеют значения по умолчанию. Это делает использование таких библиотек, как <b>Jackson</b> и <b>JPA</b>, более простым в языке <b>Kotlin</b>, так как они используют пустые конструкторы при создании экземпляров классов.
+
+``` kotlin
+class Customer(val customerName: String = "")
+```
+
+
+<!--### Creating instances of classes-->
+### Создание экземпляров классов
+
+<!--To create an instance of a class, we call the constructor as if it were a regular function:-->
+Для создания экземпляра класса конструктор вызывается так, как если бы он был обычной функцией:
+
+``` kotlin
+val invoice = Invoice()
+
+val customer = Customer("Joe Smith")
+```
+
+<!--Note that Kotlin does not have a **new** keyword.-->
+Обращаем ваше внимание на то, что в <b>Kotlin</b> не используется ключевое слово **new**.
+
+
+<!--### Class Members-->
+### Члены класса
+
+<!--Classes can contain-->
+Классы могут содержать в себе:
+
+<!--* Constructors and initializer blocks
+* [Functions](functions.html)
+* [Properties](properties.html)
+* [Nested and Inner Classes](nested-classes.html)
+* [Object Declarations](object-declarations.html)-->
+* Конструкторы и инициализирующие блоки
+* [Функции](functions.html)
+* [Свойства](properties.html)
+* [Вложенные классы](nested-classes.html)
+* [Объявления объектов](object-declarations.html)
+
+<a name="inheritance"></a>
+
+<!--## Inheritance-->
+## Наследование
+
+<!--All classes in Kotlin have a common superclass `Any`, that is a default super for a class with no supertypes declared:-->
+Для всех классов в языке <b>Koltin</b> родительским суперклассом является класс `Any`. Он также является родительским классом для любого класса, в котором не указан какой-либо другой родительский класс:
+
+``` kotlin
+class Example // Implicitly inherits from Any
+```
+
+<!--`Any` is not `java.lang.Object`; in particular, it does not have any members other than `equals()`, `hashCode()` and `toString()`.
+Please consult the [Java interoperability](java-interop.html#object-methods) section for more details.-->
+Класс `Any` не является аналогом `java.lang.Object`. В частности, у него нет никаких членов кроме методов: `equals()`, `hashCode()`, и `toString()`. Пожалуйста, ознакомьтесь с [совместимостью c Java](http://kotlinlang.org/docs/reference/java-interop.html#object-methods) для более подробной информации.
+
+<!--To declare an explicit supertype, we place the type after a colon in the class header:-->
+Для явного объявления суперкласса мы помещаем его имя за знаком двоеточия в оглавлении класса:
+
+``` kotlin
+open class Base(p: Int)
+
+class Derived(p: Int) : Base(p)
+```
+
+<!--If the class has a primary constructor, the base type can (and must) be initialized right there,
+using the parameters of the primary constructor.-->
+Если у класса есть основной конструктор, базовый тип может (и должен) быть проинициализирован там же, с использованием параметров первичного конструктора.
+
+<!--If the class has no primary constructor, then each secondary constructor has to initialize the base type
+using the **super** keyword, or to delegate to another constructor which does that.
+Note that in this case different secondary constructors can call different constructors of the base type:-->
+Если у класса нет первичного конструктора, тогда каждый последующий второстепенный конструктор должен включать в себя инициализацию базового типа с помощью ключевого слова **super** или давать отсылку на другой конструктор, который это делает.
+Примечательно, что любые вторичные конструкторы могут ссылаться на разные конструкторы базового типа:
+
+``` kotlin
+class MyView : View {
+    constructor(ctx: Context) : super(ctx) {
+    }
+
+    constructor(ctx: Context, attrs: AttributeSet) : super(ctx, attrs) {
+    }
+}
+```
+
+<!--The **open** annotation on a class is the opposite of Java's **final**: it allows others
+to inherit from this class. By default, all classes in Kotlin are final, which
+corresponds to [Effective Java](http://www.oracle.com/technetwork/java/effectivejava-136174.html),
+Item 17: *Design and document for inheritance or else prohibit it*.-->
+Ключевое слово **open** является противоположностью слову **final** в <b>Java</b>: оно позволяет другим классам наследоваться от данного. По умолчанию, все классы в <b>Kotlin</b> имеют статус **final**, что отвечает [Effective Java](http://www.oracle.com/technetwork/java/effectivejava-136174.html), Item 17: *Design and document for inheritance or else prohibit it*.
+
+<!--### Overriding Members-->
+<a name="overriding-properties"></a>
+### Переопределение членов класса
+
+<!--As we mentioned before, we stick to making things explicit in Kotlin. And unlike Java, Kotlin requires explicit
+annotations for overridable members (we call them *open*) and for overrides:-->
+Как упоминалось ранее, мы придерживаемся идеи определённости и ясности в языке <b>Kotlin</b>. И, в отличие от <b>Java</b>, <b>Kotlin</b>
+требует чёткой аннотации и для членов, которые могут быть переопределены, и для самого переопределения:
+
+``` kotlin
+open class Base {
+  open fun v() {}
+  fun nv() {}
+}
+class Derived() : Base() {
+  override fun v() {}
+}
+```
+
+<!--The **override** annotation is required for `Derived.v()`. If it were missing, the compiler would complain.
+If there is no **open** annotation on a function, like `Base.nv()`, declaring a method with the same signature in a subclass is illegal,
+either with **override** or without it. In a final class (e.g. a class with no **open** annotation), open members are prohibited.-->
+Для `Derived.v()` необходима аннотация  **override**. В случае её отсутствия компилятор выдаст ошибку. Если у функции типа `Base.nv()` нет аннотации **open**, объявление метода с такой же сигнатурой в производном классе невозможно, с **override** или без. В **final** классе (классе без аннотации **open**),  запрещено использование аннотации **open** для его членов. 
+
+<!--A member marked **override** is itself open, i.e. it may be overridden in subclasses. If you want to prohibit re-overriding, use **final**:-->
+Член класса, помеченный **override**, является сам по себе **open**, т.е. он может быть переопределён в производных классах. Если вы хотите запретить возможность переопределения такого члена, используйте **final**:
+
+``` kotlin
+open class AnotherDerived() : Base() {
+  final override fun v() {}
+}
+```
+
+<!--#### Wait! How will I hack my libraries now?!-->
+#### Стойте! Как мне теперь хакнуть свои библиотеки?
+
+<!--One issue with our approach to overriding (classes and members final by default) is that it would be difficult to subclass something inside the libraries you use to override some method that was not intended for overriding by the library designer, and introduce some nasty hack there.-->
+При нашем подходе к переопределению классов и их членов (которые по дефолту **final**) будет сложно унаследоваться от чего-нибудь внутри используемых вами библиотек для того, чтобы переопределить не предназначенный для этого метод и внедрить туда свой гнусный хак.
+
+<!--We think that this is not a disadvantage, for the following reasons:-->
+Мы думаем, что это не является недостатком по следующим причинам:
+
+<!--* Best practices say that you should not allow these hacks anyway
+* People successfully use other languages (C++, C#) that have similar approach
+* If people really want to hack, there still are ways: you can always write your hack in Java and call it from Kotlin (*see [Java Interop](java-interop.html)*), and Aspect frameworks always work for these purposes-->
+* Опыт поколений говорит о том, что, в любом случае, лучше не позволять внедрять такие хаки
+* Люди успешно используют другие языки (<b>C++</b>, <b>C#</b>), которые имеют аналогичный подход к этому вопросу
+* Если кто-то действительно хочет хакнуть, пусть напишет свой код на <b>Java</b> и вызовет его в <b>Kotlin</b> _(см. [Java-совместимость](http://kotlinlang.org/docs/reference/java-interop.html))_
+
+<!--### Overriding Rules-->
+### Правила переопределения
+
+<!--In Kotlin, implementation inheritance is regulated by the following rule: if a class inherits many implementations of the same member from its immediate superclasses,
+it must override this member and provide its own implementation (perhaps, using one of the inherited ones).
+To denote the supertype from which the inherited implementation is taken, we use **super** qualified by the supertype name in angle brackets, e.g. `super<Base>`:-->
+В <b>Kotlin</b> правила наследования имплементации определены следующим образом: если класс перенимает большое количество имплементаций одного и того члена от ближайших родительских классов, он должен переопределить этот член и обеспечить свою собственную имплементацию (возможно, используя одну из унаследованных). Для того, чтобы отметить супертип (родительский класс), от которого мы унаследовали данную имплементацию, мы используем ключевое слово **super**. Для уточнения имя родительского супертипа используются треугольные скобки, например `super<Base>`:
+
+``` kotlin
+open class A {
+  open fun f() { print("A") }
+  fun a() { print("a") }
+}
+
+interface B {
+  fun f() { print("B") } // interface members are 'open' by default
+  fun b() { print("b") }
+}
+
+class C() : A(), B {
+  // The compiler requires f() to be overridden:
+  override fun f() {
+    super<A>.f() // call to A.f()
+    super<B>.f() // call to B.f()
+  }
+}
+```
+
+<!---It's fine to inherit from both `A` and `B`, and we have no problems with `a()` and `b()` since `C` inherits only one implementation of each of these functions.
+But for `f()` we have two implementations inherited by `C`, and thus we have to override `f()` in `C`
+and provide our own implementation that eliminates the ambiguity.-->
+Нормально наследоваться одновременно от `A` и `B`. У нас не возникнет никаких проблем с `a()` и `b()` в том случае, если `C` унаследует только одну имплементацию этих функций.
+Но для `f()` у нас есть две имплементации, унаследованные классом `C`, поэтому необходимо переопределить `f()` в `C` и обеспечить нашу собственную реализацию этого метода для устранения получившейся неоднозначности.
+
+<!--## Abstract Classes-->
+## Абстрактные классы
+
+<!--A class and some of its members may be declared **abstract**
+An abstract member does not have an implementation in its class.
+Note that we do not need to annotate an abstract class or function with open – it goes without saying.-->
+Класс и некоторые его члены могут быть объявлены как **abstract**. Абстрактный член не имеет реализации в его классе.
+Обратите внимание, что нам не надо аннотировать абстрактный класс или функцию словом **open** - это подразумевается и так.
+
+<!--We can override a non-abstract open member with an abstract one-->
+Можно переопределить не-абстрактный **open** член абстрактным
+
+``` kotlin
+open class Base {
+  open fun f() {}
+}
+
+abstract class Derived : Base() {
+  override abstract fun f()
+}
+```
+
+<!--## Companion Objects-->
+## Объекты-помощники
+
+<!--In Kotlin, unlike Java or C#, classes do not have static methods. In most cases, it's recommended to simply use
+package-level functions instead.-->
+В <b>Kotlin</b>, в отличие от <b>Java</b> или <b>C#</b>, в классах не бывает статических методов. В большинстве случаев рекомендуется использовать функции на уровне пакета (ориг.: _"package-level functions"_).
+
+<!--If you need to write a function that can be called without having a class instance but needs access to the internals
+of a class (for example, a factory method), you can write it as a member of an [object declaration](object-declarations.html)
+inside that class.-->
+Если вам нужно написать функцию, которая может быть использована без создания экземпляра класса, но имела бы доступ к данным внутри этого класса (к примеру, фабричный метод), вы можете написать её как член [объявления объекта](object-declarations.html) внутри этого класса.
+
+<!--Even more specifically, if you declare a [companion object](object-declarations.html#companion-objects) inside your class,
+you'll be able to call its members with the same syntax as calling static methods in Java/C#, using only the class name
+as a qualifier.-->
+В частности, если вы объявляете [объект-помощник](object-declarations.html#companion-objects) в своём классе, у вас появляется возможность обращаться к его членам, используя тот же синтаксис, как при использовании статических методов в <b>Java</b>/<b>C#</b> (указав название класса для доступа).
+
+--------------------------------------------------------------------------------
+
+<!--# Data Classes-->
+# Классы данных
+
+<!--We frequently create classes that do nothing but hold data. In such classes some functionality is often mechanically
+derivable from the data they hold. In Kotlin a class can be marked as `data`:-->
+Нередко мы создаём классы, единственным назначением которых является хранение данных. Функционал таких классов зависит от самих данных, которые в них хранятся. В <b>Kotlin</b> класс может быть отмечен словом `data`:
+
+``` kotlin
+data class User(val name: String, val age: Int)
+```
+
+<!--This is called a _data class_. The compiler automatically derives the following members from all properties declared in
+the primary constructor:-->
+Такой класс называется _классом данных_. Компилятор автоматически извлекает все члены данного класса из свойств, объявленных в первичном конструкторе:
+
+  * пара функций `equals()`/`hashCode()`,
+  * `toString()` в форме `"User(name=John, age=42)"`,
+  * функции [componentN()](multi-declarations.html), которые соответствуют свойствам, в зависимости от их порядка либо объявления,
+  * функция `copy()` (см. ниже)
+
+<!--If any of these functions is explicitly defined in the class body or inherited from the base types, it will not be generated.-->
+Если какая-либо из этих функций явно определена в теле класса (или унаследована от родительского класса), то генерироваться она не будет.
+
+<!--To ensure consistency and meaningful behavior of the generated code, data classes have to fulfil the following requirements:-->
+Для того, чтобы поведение генерируемого кода соответствовало здравому смыслу, классы данных должны быть оформлены с соблюдением некоторых требований:
+
+  * Первичный конструктор должен иметь как минимум один параметр;
+  * Все параметры первичного конструктора должны быть отмечены, как `val` или `var`;
+  * Классы данных не могут быть абстрактными, open, sealed или inner;
+  * Дата-классы не могут наследоваться от других классов (но могут реализовывать интерфейсы).
+  
+<!-- Since 1.1, data classes may extend other classes (see Sealed classes for examples). -->
+Начиная с версии 1.1, классы данных могут расширять другие классы (см. примеры в [Sealed classes](sealed-classes.html#sealed-classes-and-data-classes))
+
+> Для того, чтобы у сгенерированного в JVM класса был конструктор без параметров, значения всех свойств должны быть заданы по умолчанию
+> (см. [Конструкторы](classes.html#constructors))
+``` kotlin
+ data class User(val name: String = "", val age: Int = 0)
+ ```
+
+<!--## Copying-->
+## Копирование
+
+<!--It's often the case that we need to copy an object altering _some_ of its properties, but keeping the rest unchanged.
+This is what `copy()` function is generated for. For the `User` class above, its implementation would be as follows:-->
+Довольно часто нам приходится копировать объект с изменением только _некоторых_ его свойств. Для этой задачи генерируется функция `copy()`. Для написанного выше класса `User` такая реализация будет выглядеть следующим образом:
+
+``` kotlin
+fun copy(name: String = this.name, age: Int = this.age) = User(name, age)
+```
+
+<!--This allows us to write-->
+Это позволяет нам писать
+
+``` kotlin
+val jack = User(name = "Jack", age = 1)
+val olderJack = jack.copy(age = 2)
+```
+
+<!--## Data Classes and Destructuring Declarations-->
+## Классы данных и мульти-декларации
+
+<!--_Component functions_ generated for data classes enable their use in [destructuring declarations](multi-declarations.html):-->
+Сгенерированные для классов данных _составные функции_ позволяют использовать их в [мульти-декларациях](multi-declarations.html):
+
+``` kotlin
+val jane = User("Jane", 35)
+val (name, age) = jane
+println("$name, $age years of age") // выводит "Jane, 35 years of age"
+```
+
+<!--## Standard Data Classes-->
+## Стандартные классы данных
+
+<!--The standard library provides `Pair` and `Triple`. In most cases, though, named data classes are a better design choice,
+because they make the code more readable by providing meaningful names for properties.-->
+Стандартная библиотека предоставляет `Pair` и `Triple`. Однако, в большинстве случаев, проименованные классы данных являются лучшим решением, потому что делают код более читаемым, избегая малосодержательные имена для свойств.
+
+> [Статья на эту тему на Хабре](https://habrahabr.ru/company/JetBrains/blog/152126/)
+
+--------------------------------------------------------------------------------
+<!--# Delegated Properties-->
+<!--https://habrahabr.ru/company/JetBrains/blog/183444/-->
+# Делегированные свойства
+_За помощь в переводе спасибо [официальному блогу JetBrains на Хабрахабре](https://habrahabr.ru/company/JetBrains/blog/183444/)_
+
+<!--There are certain common kinds of properties, that, though we can implement them manually every time we need them, 
+would be very nice to implement once and for all, and put into a library. Examples include-->
+Существует несколько основных видов свойств, которые мы реализовываем каждый раз вручную в случае их надобности. Однако намного удобнее было бы реализовать их раз и навсегда и положить в какую-нибудь библиотеку. Примеры таких свойств:
+
+<!--* lazy properties: the value gets computed only upon first access,
+* observable properties: listeners get notified about changes to this property,
+* storing properties in a map, not in separate field each.-->
+* ленивые свойства (lazy properties): значение вычисляется один раз, при первом обращении
+* свойства, на события об изменении которых можно подписаться (observable properties)
+* свойства, хранимые в ассоциативном списке, а не в отдельных полях
+
+<!--To cover these (and other) cases, Kotlin supports _delegated properties_:-->
+Для таких случаев, Kotlin поддерживает _делегированные свойства_:
+
+``` kotlin
+class Example {
+    var p: String by Delegate()
+}
+```
+
+<!--The syntax is: `val/var <property name>: <Type> by <expression>`. The expression after *by*{:.keyword} is the _delegate_, 
+because `get()` (and `set()`) corresponding to the property will be delegated to its `getValue()` and `setValue()` methods.
+Property delegates don’t have to implement any interface, but they have to provide a `getValue()` function (and `setValue()` - for *var*{:.keyword}'s).
+For example: -->
+
+Их синтаксис выглядит следующим образом: `val/var <имя свойства>: <Тип> by <выражение>`. Выражение после *by* — _делегат_: обращения  (`get()`, `set()`) к свойству будут обрабатываться этим выражением. 
+Делегат не обязан реализовывать какой-то интерфейс, достаточно, чтобы у него были методы `getValue()` и `setValue()` с определённой сигнатурой: 
+
+``` kotlin
+class Delegate {
+    operator fun getValue(thisRef: Any?, property: KProperty<*>): String {
+        return "$thisRef, спасибо за делегирование мне '${property.name}'!"
+    }
+ 
+    operator fun setValue(thisRef: Any?, property: KProperty<*>, value: String) {
+        println("$value было присвоено значению '${property.name} в $thisRef.'")
+    }
+}
+```
+
+<!--When we read from `p` that delegates to an instance of `Delegate`, the `getValue()` function from `Delegate` is called,
+so that its first parameter is the object we read `p` from and the second parameter holds a description of `p` itself 
+(e.g. you can take its name). For example: -->
+
+Когда мы читаем значение свойства `p`, вызывается метод `getValue()` класса `Delegate`, причем первым параметром ей передается тот объект, у которого запрашивается свойство `p`, а вторым — объект-описание самого свойства p (у него можно, в частности, узнать имя свойства). Например:
+
+``` kotlin
+val e = Example()
+println(e.p)
+```
+
+<!--This prints -->
+Этот код выведет
+
+``` kotlin
+Example@33a17727, спасибо за делегирование мне ‘p’!
+```
+ 
+<!--Similarly, when we assign to `p`, the `setValue()` function is called. The first two parameters are the same, and the third holds the value being assigned:-->
+Похожим образом, когда мы обращаемся к `p`, вызывается метод `setValue()`. Два первых параметра — такие же, как у get(), а третий — присваиваемое значение свойства:
+
+``` kotlin
+e.p = "NEW"
+```
+
+<!--This prints-->
+Этот код выведет
+ 
+``` kotlin
+NEW было присвоено значению ‘p’ в Example@33a17727.
+```
+
+<!--The specification of the requirements to the delegated object can be found [below](delegated-properties.html#property-delegate-requirements).-->
+Спецификация требований к делегированным свойствам может быть найдена [ниже](delegated-properties.html#property-delegate-requirements).
+
+<!--Note that since Kotlin 1.1 you can declare a delegated property inside a function or code block, it shouldn't necessarily be a member of a class.
+Below you can find [the example](delegated-properties.html#local-delegated-properties-since-11).-->
+Заметьте, что начиная с версии Kotlin 1.1, вы можете объявлять делегированные свойства внутри функций или блоков кода, а не только внутри классов. Снизу вы можете найти пример.
+
+<!--## Standard Delegates-->
+## Стандартные делегаты
+
+<!--The Kotlin standard library provides factory methods for several useful kinds of delegates.-->
+Стандартная библиотека Kotlin предоставляет несколько полезных видов делегатов:
+
+### Ленивые свойства (lazy properties)
+
+<!--`lazy()` is a function that takes a lambda and returns an instance of `Lazy<T>` which can serve as a delegate for implementing a lazy property:
+the first call to `get()` executes the lambda passed to `lazy()` and remembers the result, 
+subsequent calls to `get()` simply return the remembered result. -->
+`lazy()` это функция, которая принимает лямбду и возвращает экземпляр класса `Lazy<T>`, который служит делегатом для реализации ленивого свойства: первый вызов `get()` запускает лямбда-выражение, переданное `lazy()` в качестве аргумента, и запоминает полученное значение, а последующие вызовы просто возвращают вычисленное значение. 
+
+
+``` kotlin
+val lazyValue: String by lazy {
+    println("computed!")
+    "Hello"
+}
+
+fun main(args: Array<String>) {
+    println(lazyValue)
+    println(lazyValue)
+}
+```
+
+Этот код выведет:
+
+```
+computed!
+Hello
+Hello
+```
+
+<!--By default, the evaluation of lazy properties is **synchronized**: the value is computed only in one thread, and all threads
+will see the same value. If the synchronization of initialization delegate is not required, so that multiple threads
+can execute it simultaneously, pass `LazyThreadSafetyMode.PUBLICATION` as a parameter to the `lazy()` function. 
+And if you're sure that the initialization will always happen on a single thread, you can use `LazyThreadSafetyMode.NONE` mode, 
+which doesn't incur any thread-safety guarantees and the related overhead.-->
+По умолчанию вычисление ленивых свойств **синхронизировано**: значение вычисляется только в одном потоке выполнения, и все остальные потоки могут видеть одно и то же значение. Если синхронизация не требуется, передайте `LazyThreadSafetyMode.PUBLICATION` в качестве параметра в функцию `lazy()`, тогда несколько потоков смогут исполнять вычисление одновременно. Или если вы уверены, что инициализация всегда будет происходить в одном потоке исполнения, вы можете использовать режим `LazyThreadSafetyMode.NONE`, который не гарантирует никакой потокобезопасности.
+
+
+### Observable свойства
+
+<!--`Delegates.observable()` takes two arguments: the initial value and a handler for modifications.
+The handler gets called every time we assign to the property (_after_ the assignment has been performed). It has three
+parameters: a property being assigned to, the old value and the new one:-->
+Функция `Delegates.observable()` принимает два аргумента: начальное значение свойства и обработчик (лямбда), который вызывается при изменении свойства. У обработчика три параметра: описание свойства, которое изменяется, старое значение и новое значение.
+
+``` kotlin
+import kotlin.properties.Delegates
+
+class User {
+    var name: String by Delegates.observable("<no name>") {
+        prop, old, new ->
+        println("$old -> $new")
+    }
+}
+
+fun main(args: Array<String>) {
+    val user = User()
+    user.name = "first"
+    user.name = "second"
+}
+```
+
+<!--This example prints:-->
+Этот код выведет:
+
+```
+<no name> -> first
+first -> second
+```
+
+Если Вам нужно иметь возможность запретить присваивание некоторых значений, используйте функцию `vetoable()` вместо `observable()`.
+
+<!--## Storing Properties in a Map-->
+## Хранение свойств в ассоциативном списке
+
+<!--One common use case is storing the values of properties in a map.
+This comes up often in applications like parsing JSON or doing other “dynamic” things.
+In this case, you can use the map instance itself as the delegate for a delegated property.-->
+Один из самых частых сценариев использования делегированных свойств заключается в хранении свойств в ассоциативном списке. Это полезно в "динамическом" коде, например, при работе с JSON:
+
+``` kotlin
+class User(val map: Map<String, Any?>) {
+    val name: String by map
+    val age: Int     by map
+}
+```
+
+<!--In this example, the constructor takes a map:-->
+В этом примере конструктор принимает ассоциативный список
+
+``` kotlin
+val user = User(mapOf(
+    "name" to "John Doe",
+    "age"  to 25
+))
+```
+
+<!--Delegated properties take values from this map (by the string keys – names of properties):-->
+Делегированные свойства берут значения из этого ассоциативного списка (по строковым ключам)
+
+
+``` kotlin
+println(user.name) // Prints "John Doe"
+println(user.age)  // Prints 25
+```
+
+<!--This works also for *var*{:.keyword}’s properties if you use a `MutableMap` instead of read-only `Map`:-->
+Также, если вы используете `MutableMap` вместо `Map`, поддерживаются изменяемые свойства (var):
+
+``` kotlin
+class MutableUser(val map: MutableMap<String, Any?>) {
+    var name: String by map
+    var age: Int     by map
+}
+```
+
+<!--## Local Delegated Properties (since 1.1)-->
+## Локальные делегированные свойства (с версии 1.1)
+
+<!--You can declare local variables as delegated properties.
+For instance, you can make a local variable lazy:-->
+Вы можете объявить локальные переменные как делегированные свойства. Например, вы можете сделать локальную переменную ленивой:
+
+``` kotlin
+fun example(computeFoo: () -> Foo) {
+    val memoizedFoo by lazy(computeFoo)
+
+    if (someCondition && memoizedFoo.isValid()) {
+        memoizedFoo.doSomething()
+    }
+}
+```
+
+<!--The `memoizedFoo` variable will be computed on the first access only.
+If `someCondition` fails, the variable won't be computed at all.-->
+Переменная `memoizedFoo` будет вычислена только при первом обращении к ней.
+Если условие `someCondition` будет ложно, значение переменной не будет вычислено вовсе.
+
+<a name="property-delegate-requirements"></a>
+
+<!--## Property Delegate Requirements-->
+## Требования к делегированным свойствам
+
+<!--Here we summarize requirements to delegate objects. -->
+Здесь приведены требования к объектам-делегатам. 
+
+<!--For a **read-only** property (i.e. a *val*{:.keyword}), a delegate has to provide a function named `getValue` that takes the following parameters:-->
+Для **read-only** свойства (например *val*), делегат должен предоставлять функцию `getValue`, которая принимает следующие параметры:
+
+<!--* `thisRef` - must be the same or a supertype of the _property owner_ (for extension properties - the type being extended),
+* `property` - must be of type `KProperty<*>` or its supertype, this function must return the same type as property (or its subtype).-->
+
+* `thisRef` — должен иметь такой же тип или быть наследником типа _хозяина свойства_ (для [расширений](extensions.html) —  тип, который расширяется)
+* `property` — должен быть типа `KProperty<*>` или его родительского типа. Эта функция должна возвращать значение того же типа, что и свойство (или его родительского типа).
+
+<!--For a **mutable** property (a *var*{:.keyword}), a delegate has to _additionally_ provide a function named `setValue` that takes the following parameters:-->
+Для **изменяемого** свойства (*var*) делегат должен _дополнительно_ предоставлять функцию `setValue`, которая принимает следующие параметры:
+ 
+<!--* `thisRef` — same as for `getValue()`,
+* `property` — same as for `getValue()`,
+* new value — must be of the same type as a property or its supertype.-->
+* `thisRef` — то же что и у `getValue()`,
+* `property` — то же что и у `getValue()`,
+* new value — должен быть того же типа, что и свойство (или его родительского типа).
+ 
+<!--`getValue()` and/or `setValue()` functions may be provided either as member functions of the delegate class or extension functions.
+The latter is handy when you need to delegate property to an object which doesn't originally provide these functions.
+Both of the functions need to be marked with the `operator` keyword.-->
+Функции `getValue()` и/или `setValue()` могут быть предоставлены либо как члены класса-делегата, либо как его [расширения](extensions.html). Последнее полезно когда вам нужно делегировать свойство объекту, который изначально не имеет этих функций. Обе эти функции должны быть отмечены с помощью ключевого слова `operator`.
+
+<!--The delegate class may implement one of the interfaces `ReadOnlyProperty` and `ReadWriteProperty` containing the required `operator` methods.
+These interfaces are declared in the Kotlin standard library:-->
+
+Эти интерфейсы объявлены в стандартной библиотеке Kotlin:
+
+``` kotlin
+interface ReadOnlyProperty<in R, out T> {
+    operator fun getValue(thisRef: R, property: KProperty<*>): T
+}
+
+interface ReadWriteProperty<in R, T> {
+    operator fun getValue(thisRef: R, property: KProperty<*>): T
+    operator fun setValue(thisRef: R, property: KProperty<*>, value: T)
+}
+```
+
+<!--### Translation Rules-->
+### Translation Rules
+
+<!--Under the hood for every delegated property the Kotlin compiler generates an auxiliary property and delegates to it.
+For instance, for the property `prop` the hidden property `prop$delegate` is generated, and the code of the accessors simply delegates to this additional property:-->
+Для каждого делегированного свойства компилятор Kotlin "за кулисами" генерирует вспомогательное свойство и делегирует его. Например, для свойства `prop` генерируется скрытое свойство `prop$delegate`, и исполнение геттеров и сеттеров просто делегируется этому дополнительному свойству:
+
+``` kotlin
+class C {
+    var prop: Type by MyDelegate()
+}
+
+// этот код генерируется компилятором:
+class C {
+    private val prop$delegate = MyDelegate()
+    var prop: Type
+        get() = prop$delegate.getValue(this, this::prop)
+        set(value: Type) = prop$delegate.setValue(this, this::prop, value)
+}
+```
+<!--The Kotlin compiler provides all the necessary information about `prop` in the arguments: the first argument `this` refers to an instance of the outer class `C` and `this::prop` is a reflection object of the `KProperty` type describing `prop` itself.-->
+
+Компилятор Kotlin предоставляет всю необходимую информацию о `prop` в аргументах: первый аргумент `this` ссылается на экземпляр внешнего класса `C` и `this::prop` reflection-объект типа `KProperty`, описывающий сам `prop`.
+
+<!--Note that the syntax `this::prop` to refer a [bound callable reference](reflection.html#bound-function-and-property-references-since-11) in the code directly is available only since Kotlin 1.1.-->
+Заметьте, что синтаксис `this::prop` для обращения к [bound callable reference](http://kotlinlang.org/docs/reference/reflection.html#bound-function-and-property-references-since-11) напрямую в коде программы доступен только с Kotlin версии 1.1
+
+<!--### Providing a delegate (since 1.1)-->
+### Предоставление делегата
+_Примечание: Предоставление делегата доступно в Kotlin начиная с версии 1.1_
+
+<!--By defining the `provideDelegate` operator you can extend the logic of creating the object to which the property implementation is delegated.
+If the object used on the right hand side of `by` defines `provideDelegate` as a member or extension function, that function will be
+called to create the property delegate instance.-->
+С помощью определения оператора `provideDelegate` вы можете расширить логику создания объекта, которому будет делегировано свойство. Если объект, который используется справа от `by`, определяет `provideDelegate` как член или как [расширение](extensions.html), эта функция будет вызвана для создания экземпляра делегата.
+
+<!--One of the possible use cases of `provideDelegate` is to check property consistency when the property is created, not only in its getter or setter.-->
+Один из возможных юзкейсов `provideDelegate` — это проверка состояния свойства при его создании.
+
+<!--For example, if you want to check the property name before binding, you can write something like this:-->
+Например, если вы хотите проверить имя свойства перед связыванием, вы можете написать что-то вроде:
+
+``` kotlin
+class ResourceLoader<T>(id: ResourceID<T>) {
+    operator fun provideDelegate(
+            thisRef: MyUI,
+            prop: KProperty<*>
+    ): ReadOnlyProperty<MyUI, T> {
+        checkProperty(thisRef, prop.name)
+        // создание делегата
+    }
+
+    private fun checkProperty(thisRef: MyUI, name: String) { ... }
+}
+
+fun <T> bindResource(id: ResourceID<T>): ResourceLoader<T> { ... }
+
+class MyUI {
+    val image by bindResource(ResourceID.image_id)
+    val text by bindResource(ResourceID.text_id)
+}
+```
+
+<!--The parameters of `provideDelegate` are the same as for `getValue`:-->
+`provideDelegate` имеет те же параметры, что и `getValue`:
+
+<!--* `thisRef` - must be the same or a supertype of the _property owner_ (for extension properties - the type being extended),
+* `property` - must be of type `KProperty<*>` or its supertype.-->
+* `thisRef` — должен иметь такой же тип, или быть наследником типа _хозяина свойства_ (для [расширений](extensions.html) —  тип, который расширяется)
+* `property` — должен быть типа `KProperty<*>` или его родительского типа. Эта функция должна возвращать значение того же типа, что и свойство (или его родительского типа)
+
+<!--The `provideDelegate` method is called for each property during the creation of the `MyUI` instance, and it performs the necessary validation right away.-->
+Метод `provideDelegate` вызывается для каждого свойства во время создания экземпляра `MyUI`, и сразу совершает необходимые проверки.
+
+<!--Without this ability to intercept the binding between the property and its delegate, to achieve the same functionality
+you'd have to pass the property name explicitly, which isn't very convenient:-->
+Не будь этой возможности внедрения между свойством и делегатом, для достижения той же функциональности вам бы пришлось передавать имя свойства явно, что не очень удобно:
+
+``` kotlin
+// Проверяем имя свойства без "provideDelegate"
+class MyUI {
+    val image by bindResource(ResourceID.image_id, "image")
+    val text by bindResource(ResourceID.text_id, "text")
+}
+
+fun <T> MyUI.bindResource(
+        id: ResourceID<T>,
+        propertyName: String
+): ReadOnlyProperty<MyUI, T> {
+   checkProperty(this, propertyName)
+   // создание делегата
+}
+```
+
+<!--In the generated code, the `provideDelegate` method is called to initialize the auxiliary `prop$delegate` property.
+Compare the generated code for the property declaration `val prop: Type by MyDelegate()` with the generated code 
+[above](delegated-properties.html#translation-rules) (when the `provideDelegate` method is not present):-->
+В сгенерированном коде метод `provideDelegate` вызывается для инициализации вспомогательного свойства `prop$delegate`.
+Сравните сгенерированный для объявления свойства код `val prop: Type by MyDelegate()` со сгенерированным кодом из Transaction Rules (когда `provideDelegate` не представлен):
+
+``` kotlin
+class C {
+    var prop: Type by MyDelegate()
+}
+
+// этот код будет сгенерирован компилятором 
+// когда функция 'provideDelegate' доступна:
+class C {
+    // вызываем "provideDelegate" для создания вспомогательного свойства "delegate"
+    private val prop$delegate = MyDelegate().provideDelegate(this, this::prop)
+    val prop: Type
+        get() = prop$delegate.getValue(this, this::prop)
+}
+```
+
+<!--Note that the `provideDelegate` method affects only the creation of the auxiliary property and doesn't affect the code generated for getter or setter.-->
+Заметьте, что метод `provideDelegate` влияет только на создание вспомогательного свойства и не влияет на код, генерируемый геттером или сеттером.
+
+--------------------------------------------------------------------------------
+
+<!--# Delegation-->
+# Делегирование
+
+<!--## Class Delegation-->
+## Делегирование класса
+
+<!--The [Delegation pattern](https://en.wikipedia.org/wiki/Delegation_pattern) has proven to be a good alternative to implementation inheritance,
+and Kotlin supports it natively requiring zero boilerplate code.
+A class `Derived` can inherit from an interface `Base` and delegate all of its public methods to a specified object:-->
+[Шаблон делегирования](https://ru.wikipedia.org/wiki/%D0%A8%D0%B0%D0%B1%D0%BB%D0%BE%D0%BD_%D0%B4%D0%B5%D0%BB%D0%B5%D0%B3%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F)
+является хорошей альтернативой наследованию, и Kotlin поддерживает его нативно, освобождая вас от необходимости написания шаблонного кода.
+
+``` kotlin
+interface Base {
+    fun print()
+}
+
+class BaseImpl(val x: Int) : Base {
+    override fun print() { print(x) }
+}
+
+class Derived(b: Base) : Base by b
+
+fun main(args: Array<String>) {
+    val b = BaseImpl(10)
+    Derived(b).print() // prints 10
+}
+```
+
+<!--The *by*{: .keyword }-clause in the supertype list for `Derived` indicates that `b` will be stored internally in objects of `Derived`
+and the compiler will generate all the methods of `Base` that forward to `b`.-->
+Ключевое слово `by` в оглавлении `Derived`, находящееся после типа делегируемого класса, говорит о том, что объект `b` типа `Base` будет храниться внутри экземпляра `Derived`, и компилятор сгенерирует у `Derived` соответствующие методы из `Base`, которые при вызове будут переданы объекту `b`
+
+--------------------------------------------------------------------------------
+
+<!--# Enum Classes-->
+# Перечисляемые типы
+
+<!--The most basic usage of enum classes is implementing type-safe enums-->
+Наиболее базовый пример использования enum — это реализация типобезопасных перечислений
+
+``` kotlin
+enum class Direction {
+    NORTH, SOUTH, WEST, EAST
+}
+```
+
+<!--Each enum constant is an object. Enum constants are separated with commas.-->
+Каждая enum-константа является объектом. При объявлении константы разделяются запятыми.
+
+<!--## Initialization-->
+## Инициализация
+
+<!--Since each enum is an instance of the enum class, they can be initialized-->
+Так как константы являются экземплярами enum-класса, они могут быть инициализированы
+
+``` kotlin
+enum class Color(val rgb: Int) {
+        RED(0xFF0000),
+        GREEN(0x00FF00),
+        BLUE(0x0000FF)
+}
+```
+
+<!--## Anonymous Classes-->
+## Анонимные классы
+
+<!--Enum constants can also declare their own anonymous classes-->
+Enum-константы также могут объявлять свои собственные анонимные классы
+
+``` kotlin
+enum class ProtocolState {
+    WAITING {
+        override fun signal() = TALKING
+    },
+
+    TALKING {
+        override fun signal() = WAITING
+    };
+
+    abstract fun signal(): ProtocolState
+}
+```
+
+<!--with their corresponding methods, as well as overriding base methods. Note that if the enum class defines any
+members, you need to separate the enum constant definitions from the member definitions with a semicolon, just like
+in Java.-->
+как с их собственными методами, так и с перегруженными методами базового класса. Следует заметить, что при объявлении 
+в enum-классе каких-либо членов, необходимо отделять их от списка констант точкой с запятой, так же как и в Java.
+
+<!--## Working with Enum Constants-->
+## Работа с enum-константами
+
+<!--Just like in Java, enum classes in Kotlin have synthetic methods allowing to list
+the defined enum constants and to get an enum constant by its name. The signatures
+of these methods are as follows (assuming the name of the enum class is `EnumClass`):-->
+Так же как и в Java, enum-классы в Kotlin имеют стандартные методы для вывода списка объявленных констант и для получения enum-константы по её имени.
+Ниже приведены сигнатуры этих методов: 
+
+``` kotlin
+EnumClass.valueOf(value: String): EnumClass
+EnumClass.values(): Array<EnumClass>
+```
+
+<!--The `valueOf()` method throws an `IllegalArgumentException` if the specified name does
+not match any of the enum constants defined in the class.-->
+Метод `valueOf()` выбрасывает исключение `IllegalArgumentException`, если указанное имя не соответствует ни одной константе, объявленной в классе.
+
+<!--Every enum constant has properties to obtain its name and position in the enum class declaration:-->
+Каждая enum-константа имеет поля, в которых содержатся её имя и порядковый номер в enum-классе:
+
+``` kotlin
+val name: String
+val ordinal: Int
+```
+
+<!--The enum constants also implement the [Comparable](/api/latest/jvm/stdlib/kotlin/-comparable/index.html) interface, with the natural order being the order in which they are defined in the enum class.-->
+Также enum-константы реализуют интерфейс [Comparable](http://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-comparable/index.html). Порядок сортировки соответствует порядку объявления.
+
+
+--------------------------------------------------------------------------------
+
+<!--# Interfaces-->
+# Интерфейсы
+
+<!--Interfaces in Kotlin are very similar to Java 8. They can contain declarations of abstract methods, as well as method
+implementations. What makes them different from abstract classes is that interfaces cannot store state. They can have
+properties but these need to be abstract or to provide accessor implementations.-->
+Интерфейсы в <b>Kotlin</b> очень похожи на интерфейсы в <b>Java 8</b>. Они могут содержать абстрактные методы, методы с реализацией. Главное отличие интерфейсов от абстрактных классов заключается в невозможности хранения переменных экземпляров. Они могут иметь свойства, но те должны быть либо абстрактными, либо предоставлять реализацию методов доступа. 
+
+<!--An interface is defined using the keyword *interface*{: .keyword }-->
+Интерфейс определяется ключевым словом **interface**:
+
+``` kotlin
+interface MyInterface {
+    fun bar()
+    fun foo() {
+      // необязательное тело
+    }
+}
+```
+
+<!--## Implementing Interfaces-->
+## Реализация интерфейсов
+
+<!--A class or object can implement one or more interfaces-->
+Класс или объект могут реализовать любое количество интерфейсов:
+
+``` kotlin
+class Child : MyInterface {
+    override fun bar() {
+        // тело
+    }
+}
+```
+
+<!--## Properties in Interfaces-->
+## Свойства в интерфейсах
+
+<!--You can declare properties in interfaces. A property declared in an interface can either be abstract, or it can provide
+implementations for accessors. Properties declared in interfaces can't have backing fields, and therefore accessors
+declared in interfaces can't reference them.-->
+Вы можете объявлять свойства в интерфейсах. Свойство, объявленное в интерфейсе, может быть либо абстрактным, либо иметь свою реализацию методов доступа. Свойства в интерфейсах не могут иметь _backing fields_, соответственно, методы доступа к таким свойствам не могут обращаться к _backing fields_.
+
+``` kotlin
+interface MyInterface {
+    val prop: Int // абстрактное свойство
+
+    val propertyWithImplementation: String
+        get() = "foo"
+
+    fun foo() {
+        print(prop)
+    }
+}
+
+class Child : MyInterface {
+    override val prop: Int = 29
+}
+```
+
+<!--## Resolving overriding conflicts-->
+## Устранение противоречий при переопределении
+
+<!--When we declare many types in our supertype list, it may appear that we inherit more than one implementation of the same method. For example-->
+Когда мы объявлем большое количество типов в списке нашего супертипа, может так выйти, что мы допустим более одной реализации одного и того же метода. Например:
+
+``` kotlin
+interface A {
+    fun foo() { print("A") }
+    fun bar()
+}
+
+interface B {
+    fun foo() { print("B") }
+    fun bar() { print("bar") }
+}
+
+class C : A {
+    override fun bar() { print("bar") }
+}
+
+class D : A, B {
+    override fun foo() {
+        super<A>.foo()
+        super<B>.foo()
+    }
+    
+    override fun bar() {
+        super<B>.bar()
+    }
+}
+```
+
+<!--Interfaces A and B both declare functions foo() and bar(). Both of them implement foo(), but only B implements bar() (bar() is not marked abstract in A, because this is the default for interfaces, if the function has no body). Now, if we derive a concrete class C from A, we, obviously, have to override bar() and provide an implementation.
+However, if we derive D from A and B, we need to implement all the methods which we have inherited from multiple interfaces, and to specify how exactly D should implement them. This rule applies both to methods for which we've inherited a single implementation (bar()) and multiple implementations (foo()).-->
+Оба интерфейса *A* и *B* объявляют функции *foo()* и *bar()*. Оба реализуют *foo()*, но только *B* содержит реализацию *bar()*
+(*bar()* не отмечен как абстрактный метод в интерфейсе *A*, потому что в интерфейсах это подразумевается по умолчанию, если у функции нет тела). Теперь, если мы унаследуем какой-нибудь класс *C* от *A*, нам, очевидно, придётся переопределять *bar()*, обеспечивать его реализацию. 
+
+Однако если мы унаследуем *D* от *A* и *B*, нам надо будет переопределять все методы, которые мы унаследовали от этих интерфейсов. Это правило касается как тех методов, у которых имеется только одна реализация (*bar()*), так и тех, у которых есть несколько реализаций (*foo()*).
+
+--------------------------------------------------------------------------------
+<!--Nested Classes-->
+# Вложенные классы 
+
+<!--Classes can be nested in other classes-->
+Классы могут быть вложены в другие классы
+
+``` kotlin
+class Outer {
+    private val bar: Int = 1
+    class Nested {
+        fun foo() = 2
+    }
+}
+
+val demo = Outer.Nested().foo() // == 2
+```
+
+<!--## Inner classes-->
+## Внутренние классы
+<!--A class may be marked as inner to be able to access members of outer class. Inner classes carry a reference to an object of an outer class:-->
+Класс может быть отмечен как внутренний с помощью слова `inner`, тем самым он будет иметь доступ к членам внешнего класса. 
+Внутренние классы содержат ссылку на объект внешнего класса:
+
+``` kotlin
+class Outer {
+    private val bar: Int = 1
+    inner class Inner {
+        fun foo() = bar
+    }
+}
+
+val demo = Outer().Inner().foo() // == 1
+```
+
+<!--See [Qualified *this*{: .keyword } expressions](this-expressions.html) to learn about disambiguation of *this*{: .keyword } in inner classes.-->
+Подробнее об использовании `this` во внутренних классах: [Qualified `this` expressions](this-expressions.html)
+
+<!--## Anonymous inner classes-->
+## Анонимные внутренние классы
+<!--Anonymous inner class instances are created using an [object expression](object-declarations.html#object-expressions):-->
+Анонимные внутренние экземпляры классов создаются с помощью [object expression](object-declarations.html#object-expressions):
+
+``` kotlin
+window.addMouseListener(object: MouseAdapter() {
+    override fun mouseClicked(e: MouseEvent) {
+        // ...
+    }
+                                                                                                            
+    override fun mouseEntered(e: MouseEvent) {
+        // ...
+    }
+})
+```
+
+<!--If the object is an instance of a functional Java interface (i.e. a Java interface with a single abstract method),
+you can create it using a lambda expression prefixed with the type of the interface:-->
+Если объект является экземпляром функционального Java-интерфейса (т.е. Java-интерфейса с единственным абстрактным методом), 
+вы можете создать его с помощью лямбда-выражения с префиксом — типом интерфейса:
+
+``` kotlin
+val listener = ActionListener { println("clicked") }
+```
+
+--------------------------------------------------------------------------------
+
+<!-- # Object Expressions and Declarations -->
+# Анонимные объекты и объявление объектов
+
+<!-- Sometimes we need to create an object of a slight modification of some class, without explicitly declaring a new subclass for it. -->
+<!-- Java handles this case with *anonymous inner classes*. -->
+<!-- Kotlin slightly generalizes this concept with *object expressions* and *object declarations*. -->
+Иногда нам необходимо получить экземпляр некоторого класса с незначительной модификацией, желательно без написания нового подкласса. <b>Java</b> справляется с этим с помощью _вложенных анонимных классов_.
+<b>Kotlin</b> несколько улучшает данный подход.
+
+<a name="object-expressions"></a>
+
+<!-- ## Object expressions -->
+## Анонимные объекты (ориг.:_Object expressions_)
+
+<!-- To create an object of an anonymous class that inherits from some type (or types), we write: -->
+Для того, чтобы создать объект анонимного класса, который наследуется от какого-то типа (типов), используется конструкция:
+
+``` kotlin
+window.addMouseListener(object : MouseAdapter() {
+    override fun mouseClicked(e: MouseEvent) {
+        // ...
+    }
+
+    override fun mouseEntered(e: MouseEvent) {
+        // ...
+    }
+})
+```
+
+<!-- If a supertype has a constructor, appropriate constructor parameters must be passed to it. -->
+<!-- Many supertypes may be specified as a comma-separated list after the colon: -->
+Если у супертипа есть конструктор, то в него должны быть переданы соответсвующие параметры.
+Множество супертипов может быть указано после двоеточия в виде списка, заполненного через запятую:
+
+
+``` kotlin
+open class A(x: Int) {
+    public open val y: Int = x
+}
+
+interface B {...}
+
+val ab: A = object : A(1), B {
+    override val y = 15
+}
+```
+
+<!-- If, by any chance, we need "just an object", with no nontrivial supertypes, we can simply say: -->
+Если всё-таки нам нужен *просто объект* без всяких там родительских классов, то можем указать:
+
+``` kotlin
+val adHoc = object {
+    var x: Int = 0
+    var y: Int = 0
+}
+print(adHoc.x + adHoc.y)
+```
+
+<!-- Just like Java's anonymous inner classes, code in object expressions can access variables from the enclosing scope. -->
+<!-- (Unlike Java, this is not restricted to final variables.) -->
+Код внутри объявленного объекта может обращаться к переменным за скобками так же, как вложенные анонимные классы в <b>Java</b>
+
+``` kotlin
+fun countClicks(window: JComponent) {
+    var clickCount = 0
+    var enterCount = 0
+
+    window.addMouseListener(object : MouseAdapter() {
+        override fun mouseClicked(e: MouseEvent) {
+            clickCount++
+        }
+
+        override fun mouseEntered(e: MouseEvent) {
+            enterCount++
+        }
+    })
+    // ...
+}
+```
+
+<a name="object-declarations"></a>
+
+<!-- ## Object declarations -->
+## Объявления объектов (ориг.:_Object declarations_)
+
+<!-- [Singleton](http://en.wikipedia.org/wiki/Singleton_pattern) is a very useful pattern, and Kotlin (after Scala) makes it easy to declare singletons: -->
+[Синглтон](https://ru.wikipedia.org/wiki/%D0%9E%D0%B4%D0%B8%D0%BD%D0%BE%D1%87%D0%BA%D0%B0_(%D1%88%D0%B0%D0%B1%D0%BB%D0%BE%D0%BD_%D0%BF%D1%80%D0%BE%D0%B5%D0%BA%D1%82%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F)) - очень полезный паттерн программирования, и <b>Kotlin</b> (переняв у <b>Scala</b>) позволяет объявлять его довольно простым способом :
+
+``` kotlin
+object DataProviderManager {
+    fun registerDataProvider(provider: DataProvider) {
+        // ...
+    }
+
+    val allDataProviders: Collection<DataProvider>
+        get() = // ...
+}
+```
+
+<!-- This is called an *object declaration*, and it always has a name following the *object*{: .keyword } keyword. -->
+<!-- Just like a variable declaration, an object declaration is not an expression, and cannot be used on the right hand side of an assignment statement. -->
+Это называется *объявлением объекта* и всегда имеет приставку в виде ключевого слова **object**.
+Аналогично объявлению переменной, объявление объекта не является выражением и не может быть использовано в правой части оператора присваивания.
+
+<!-- To refer to the object, we use its name directly: -->
+Для непосредственной ссылки на объект используется его имя:
+
+``` kotlin
+DataProviderManager.registerDataProvider(...)
+```
+
+<!-- Such objects can have supertypes: -->
+Подобные объекты могут иметь супертипы:
+
+``` kotlin
+object DefaultListener : MouseAdapter() {
+    override fun mouseClicked(e: MouseEvent) {
+        // ...
+    }
+
+    override fun mouseEntered(e: MouseEvent) {
+        // ...
+    }
+}
+```
+
+<!-- **NOTE**: object declarations can't be local (i.e. be nested directly inside a function), but they can be nested into other object declarations or non-inner classes. -->
+
+**ПРИМЕЧАНИЕ**: объявление объекта не может иметь локальный характер (т.е. быть вложенным непосредственно в функцию), но может быть вложено в объявление другого объекта или какого-либо невложенного класса.
+
+<a name="companion-objects"></a>
+
+<!-- ### Companion Objects -->
+### Вспомогательные объекты
+
+<!-- An object declaration inside a class can be marked with the *companion*{: .keyword } keyword: -->
+Объявление объекта внутри класса может быть отмечено ключевым словом **companion**:
+
+``` kotlin
+class MyClass {
+    companion object Factory {
+        fun create(): MyClass = MyClass()
+    }
+}
+```
+
+<!-- Members of the companion object can be called by using simply the class name as the qualifier: -->
+Для вызова членов такого `companion` объекта используется имя класса:
+
+``` kotlin
+val instance = MyClass.create()
+```
+
+<!-- The name of the companion object can be omitted, in which case the name `Companion` will be used: -->
+Не обязательно указывать имя вспомогательного объекта. В таком случае он будет назван `Companion`:
+
+``` kotlin
+class MyClass {
+    companion object {
+    }
+}
+
+val x = MyClass.Companion
+```
+
+<!-- Note that, even though the members of companion objects look like static members in other languages, at runtime those -->
+<!-- are still instance members of real objects, and can, for example, implement interfaces: -->
+<!-- Несмотря на то, что члены таких вспомогательных объектов выглядят, как статические члены в других языках программирования, на самом деле они являются членами реальных объектов и могут реализовывать, к примеру, интерфейсы: -->
+Такие члены вспомогательных объектов выглядят, как статические члены в других языках программирования. На самом же деле, они являются членами реальных объектов и могут реализовывать, к примеру, интерфейсы:
+
+``` kotlin
+interface Factory<T> {
+    fun create(): T
+}
+
+
+class MyClass {
+    companion object : Factory<MyClass> {
+        override fun create(): MyClass = MyClass()
+    }
+}
+```
+
+<!-- However, on the JVM you can have members of companion objects generated as real static methods and fields, if you use -->
+<!-- the `@JvmStatic` annotation. See the [Java interoperability](java-to-kotlin-interop.html#static-fields) section -->
+<!-- for more details. -->
+Однако в <b>JVM</b> вы можете статически генерировать методы вспомогательных объектов и полей, используя аннотацию `@JvmStatic@`.
+См. [Совместимость с Java](http://kotlinlang.org/docs/reference/java-to-kotlin-interop.html#static-fields).
+
+
+<!-- ### Semantic difference between object expressions and declarations -->
+### Семантическое различие между анонимным объектом и декларируемым объектом.
+
+<!-- There is one important semantic difference between object expressions and object declarations: -->
+Существует только одно смысловое различие между этими двумя понятиями:
+
+<!-- * object expressions are executed (and initialized) **immediately**, where they are used -->
+<!-- * object declarations are initialized **lazily**, when accessed for the first time -->
+<!-- * a companion object is initialized when the corresponding class is loaded (resolved), matching the semantics of a Java static initializer -->
+
+* анонимный объект инициализируется **сразу после того**, как был использован
+* декларированный объект инициализируется **лениво**, в момент первого к нему доступа
+* вспомогательный объект инициализируется в момент, когда класс, к которому он относится, загружен и семантически совпадает со статическим инициализатором <b>Java</b>
+
+--------------------------------------------------------------------------------
+
+
+<!--# Properties and Fields-->
+# Свойства и поля
+
+<!--## Declaring Properties-->
+## Объявление свойств
+
+<!--Classes in Kotlin can have properties.
+These can be declared as mutable, using the *var*{: .keyword } keyword or read-only using the *val*{: .keyword } keyword.-->
+Классы в <b>Kotlin</b> могут иметь свойства: изменяемые (_mutable_) и неизменяемые (_read-only_) — **var** и **val** соответственно.
+
+``` kotlin
+public class Address {
+    public var name: String = ...
+    public var street: String = ...
+    public var city: String = ...
+    public var state: String? = ...
+    public var zip: String = ...
+}
+```
+
+<!--To use a property, we simply refer to it by name, as if it were a field in Java:-->
+Для того, чтобы воспользоваться свойством, мы просто обращаемся к его имени (как в <b>Java</b>):
+
+``` kotlin
+fun copyAddress(address: Address): Address {
+    val result = Address() // нет никакого слова `new`
+    result.name = address.name // вызов методов доступа
+    result.street = address.street
+    // ...
+    return result
+}
+```
+
+<!--## Getters and Setters-->
+## Геттеры и сеттеры
+
+<!--The full syntax for declaring a property is-->
+Полный синтаксис объявления свойства выглядит так:
+
+``` kotlin
+var <propertyName>: <PropertyType> [= <property_initializer>]
+    [<getter>]
+    [<setter>]
+```
+
+<!--The initializer, getter and setter are optional. Property type is optional if it can be inferred from the initializer or from the base class member being overridden.-->
+Инициализатор *property_initializer*, геттер и сеттер можно не указывать. Также необязательно указывать тип свойства, если он может быть выведен из контекста или наследован от базового класса.
+
+<!--Examples:-->
+Примеры:
+
+``` kotlin
+var allByDefault: Int? // ошибка: необходима явная инициализация, предусмотрены стандартные геттер и сеттер
+var initialized = 1 // имеет тип Int, стандартный геттер и сеттер
+```
+
+<!--The full syntax of a read-only property declaration differs from a mutable one in two ways: it starts with `val` instead of `var` and does not allow a setter:-->
+Синтаксис объявления констант имеет два отличия от синтаксиса объявления изменяемых переменных: во-первых, объявление начинается с ключевого слова `val` вместо `var`, а во-вторых, объявление сеттера запрещено:
+
+``` kotlin
+val simple: Int? // имеет тип Int, стандартный геттер, должен быть инициализирован в конструкторе
+val inferredType = 1 // имеет тип Int и стандартный геттер
+```
+
+<!--We can write custom accessors, very much like ordinary functions, right inside a property declaration. Here's an example of a custom getter:-->
+Мы можем самостоятельно описать методы доступа, как и обычные функции, прямо при объявлении свойств. Например, пользовательский геттер:
+
+``` kotlin
+val isEmpty: Boolean
+    get() = this.size == 0
+```
+
+<!--A custom setter looks like this:-->
+Пользовательский сеттер выглядит примерно так:
+
+``` kotlin
+var stringRepresentation: String
+    get() = this.toString()
+    set(value) {
+        setDataFromString(value) // парсит строку и устанавливает значения для других свойств
+    }
+```
+
+<!--By convention, the name of the setter parameter is `value`, but you can choose a different name if you prefer.-->
+По договорённости, имя параметра сеттера - `value`, но вы можете использовать любое другое.
+
+<!--If you need to change the visibility of an accessor or to annotate it, but don't need to change the default implementation,
+you can define the accessor without defining its body:-->
+Если вам нужно изменить область видимости метода доступа или пометить его аннотацией, при этом не внося изменения в реализацию по умолчанию, вы можете объявить метод доступа без объявления его тела:
+
+``` kotlin
+var setterVisibility: String = "abc"
+    private set // сеттер имеет private доступ и стандартную реализацию
+
+var setterWithAnnotation: Any? = null
+    @Inject set // аннотирование сеттера с помощью Inject
+```
+
+<a name="backing-fields"></a>
+
+### Backing Fields
+
+<!--Classes in Kotlin cannot have fields. However, sometimes it is necessary to have a backing field when using custom accessors. For these purposes, Kotlin provides
+an automatic backing field which can be accessed using the `field` identifier:-->
+Классы в <b>Kotlin</b> не могут иметь полей. Т.е. переменные, которые вы объявляете внутри класса только выглядят и ведут себя как поля из Java, хотя на самом деле являются _свойствами_, т.к. для них неявно реализуются методы get и set. А сама переменная, в которой находится значение свойства, называется **backing field**. Однако, иногда, при использовании пользовательских методов доступа, необходимо иметь доступ к _backing field_. Для этих целей <b>Kotlin</b> предоставляет автоматическое _backing field_, к которому можно обратиться с помощью идентификатора `field`:
+
+``` kotlin
+var counter = 0
+    set(value) {
+        if (value >= 0) field = value // значение при инициализации записывается прямиком в backing field
+    }
+```
+
+<!--The `field` identifier can only be used in the accessors of the property.-->
+Идентификатор `field` может быть использован только в методах доступа к свойству.
+
+<!--A backing field will be generated for a property if it uses the default implementation of at least one of the accessors, or if a custom accessor references it through the `field` identifier.-->
+_Backing field_ будет сгенерировано для свойства, если оно использует стандартную реализацию как минимум одного из методов доступа. Или в случае, когда пользовательский метод доступа ссылается на него через идентификатор `field`.
+
+<!--For example, in the following case there will be no backing field:-->
+Например, в нижестоящем примере не будет никакого _backing field_:
+
+``` kotlin
+val isEmpty: Boolean
+    get() = this.size == 0
+```
+
+### _Backing Properties_
+
+<!--If you want to do something that does not fit into this "implicit backing field" scheme, you can always fall back to having a *backing property*:-->
+Если вы хотите предпринять что-то такое, что выходит за рамки вышеуказанной схемы "неявного _backing field_", вы всегда можете использовать _backing property_:
+
+``` kotlin
+private var _table: Map<String, Int>? = null
+public val table: Map<String, Int>
+    get() {
+        if (_table == null) {
+            _table = HashMap() // параметры типа вычисляются автоматически (ориг.: "Type parameters are inferred")
+        }
+        return _table ?: throw AssertionError("Set to null by another thread")
+    }
+```
+
+<!--In all respects, this is just the same as in Java since access to private properties with default getters and setters is optimized so that no function call overhead is introduced.-->
+Такой подход ничем не отличается от подхода в Java, так как доступ к приватным свойствам со стандартными геттерами и сеттерами оптимизируется таким образом, что вызов функции не происходит.
+
+<!--## Compile-Time Constants-->
+## Константы времени компиляции
+
+<!--Properties the value of which is known at compile time can be marked as _compile time constants_ using the `const` modifier.
+Such properties need to fulfil the following requirements:-->
+Свойства, значение которых известно во время компиляции, могут быть помечены как _константы времени компиляции_. Для этого используется модификатор `const`. Такие свойства должны соответствовать следующим требованиям:
+
+  * Находиться на самом высоком уровне или быть членом объекта `object`  
+  * Быть проинициализированными значением типа `String` или значением примитивного типа
+  * Не иметь переопределённого геттера
+
+<!--Such properties can be used in annotations:-->
+Такие свойства могут быть использованы в аннотациях:
+
+``` kotlin
+const val SUBSYSTEM_DEPRECATED: String = "This subsystem is deprecated"
+
+@Deprecated(SUBSYSTEM_DEPRECATED) fun foo() { ... }
+```
+
+
+<!--## Late-Initialized Properties-->
+## Свойства с поздней инициализацией
+
+<!--Normally, properties declared as having a non-null type must be initialized in the constructor.
+However, fairly often this is not convenient. For example, properties can be initialized through dependency injection,
+or in the setup method of a unit test. In this case, you cannot supply a non-null initializer in the constructor,
+but you still want to avoid null checks when referencing the property inside the body of a class.-->
+Обычно, свойства, объявленные non-null типом, должны быть проинициализированы в конструкторе. Однако, довольно часто это неосуществимо. К примеру, свойства могут быть инициализированы через внедрение зависимостей, в установочном методе (ориг.: _"setup method"_) юнит-теста или в методе `onCreate` в Android. В таком случае вы не можете обеспечить non-null инициализацию в конструкторе, но всё равно хотите избежать проверок на null при обращении внутри тела класса к такому свойству.
+
+<!--To handle this case, you can mark the property with the `lateinit` modifier:-->
+Для того, чтобы справиться с такой задачей, вы можете пометить свойство модификатором `lateinit`:
+
+``` kotlin
+public class MyTest {
+    lateinit var subject: TestSubject
+
+    @SetUp fun setup() {
+        subject = TestSubject()
+    }
+
+    @Test fun test() {
+        subject.method()  // объект инициализирован, проверять на null не нужно
+    }
+}
+```
+<!--
+The modifier can be used on `var` properties declared inside the body of a class (not in the primary constructor, and only
+when the property does not have a custom getter or setter) and, since Kotlin 1.2, for top-level properties and
+local variables. The type of the property or variable must be non-null, and it must not be a primitive type.
+-->
+Такой модификатор может быть использован только с `var` свойствами, объявленными внутри тела класса (не в главном конструкторе, и только тогда, когда свойство не имеет пользовательских геттеров и сеттеров) и, начиная с Kotlin 1.2, со свойствами, расположенными на верхнем уровне, и локальными переменными. Тип такого свойства должен быть non-null и не должен быть примитивным.
+
+<!--Accessing a `lateinit` property before it has been initialized throws a special exception that clearly identifies the property
+being accessed and the fact that it hasn't been initialized.-->
+Доступ к `lateinit` свойству до того, как оно проинициализировано, выбрасывает специальное исключение, которое чётко обозначает, что свойство не было определено.
+
+<!--### Checking whether a lateinit var is initialized (since 1.2) -->
+### Проверка инициализации lateinit var (начиная с версии 1.2)
+
+<!--To check whether a `lateinit var` has already been initialized, use `.isInitialized` on
+the [reference to that property](reflection.html#property-references):-->
+Чтобы проверить, была ли проинициализировано `lateinit var` свойство, используйте `.isInitialized` метод [ссылки на это свойство](reflection.html#property-references):
+
+```kotlin
+if (foo::bar.isInitialized) {
+    println(foo.bar)
+}
+```
+
+<!--This check is only available for the properties that are lexically accessible, i.e. declared in the same type or in one of
+the outer types, or at top level in the same file.-->
+Эта проверка возможна только для лексически доступных свойств, то есть объявленных в том же типе, или в одном из внешних типов, или расположенных на верхнем того же файла.
+
+<!--## Overriding Properties-->
+## Переопределение свойств
+
+См. [Переопределение членов класса](http://kotlinlang.ru/docs/reference/classes.html#overriding-properties)
+
+<!--## Delegated Properties-->
+## Делегированные свойства
+
+<!--The most common kind of properties simply reads from (and maybe writes to) a backing field.
+On the other hand, with custom getters and setters one can implement any behaviour of a property.
+Somewhere in between, there are certain common patterns of how a property may work. A few examples: lazy values,
+reading from a map by a given key, accessing a database, notifying listener on access, etc.-->
+Самый распространённый тип свойств просто считывает (или записывает) данные из _backing field_.
+Тем не менее, с пользовательскими геттерами и сеттерами мы можем реализовать совершенно любое поведение свойства.
+В реальности, существуют общепринятые шаблоны того, как могут работать свойства. Несколько примеров:
+* Вычисление значения свойства при первом доступе к нему (ленивые свойства)
+* Чтение из ассоциативного списка с помощью заданного ключа
+* Доступ к базе данных
+* Оповещение listener'а в момент доступа
+и т.п.
+
+
+<!--Such common behaviours can be implemented as libraries using [_delegated properties_](delegated-properties.html).-->
+Такие распространённые поведения свойств могут быть реализованы в виде библиотек с помощью [_делегированных свойств_](https://kotlinlang.ru/docs/reference/delegated-properties.html).
+
+--------------------------------------------------------------------------------
+
+<!--# Sealed Classes-->
+# Изолированные классы
+
+<!--Sealed classes are used for representing restricted class hierarchies, when a value can have one of the types from a
+limited set, but cannot have any other type. They are, in a sense, an extension of enum classes: the set of values
+for an enum type is also restricted, but each enum constant exists only as a single instance, whereas a subclass
+of a sealed class can have multiple instances which can contain state.-->
+
+Изолированные классы используются для отражения ограниченных иерархий классов, когда значение может иметь тип только из ограниченного набора, и никакой другой. Они являются, по сути, расширением enum-классов: набор значений enum типа также ограничен, но каждая enum-константа существует только в единственном экземпляре, в то время как наследник изолированного класса может иметь множество экземпляров, которые могут нести в себе какое-то состояние.
+
+<!--To declare a sealed class, you put the `sealed` modifier before the name of the class. A sealed class can have
+subclasses, but all of them must be declared in the same file as the sealed class itself. (Before Kotlin 1.1,
+the rules were even more strict: classes had to be nested inside the declaration of the sealed class). -->
+
+Чтобы описать изолированный класс, укажите модификатор `sealed` перед именем класса. Изолированный класс может иметь наследников, но все они должны быть объявлены в том же файле, что и сам изолированный класс. (До версии Kotlin 1.1 правила были ещё более строгими: классы должны были быть вложены в объявлении изолированного класса). 
+
+``` kotlin
+sealed class Expr
+data class Const(val number: Double) : Expr()
+data class Sum(val e1: Expr, val e2: Expr) : Expr()
+object NotANumber : Expr()
+
+fun eval(expr: Expr): Double = when (expr) {
+    is Const -> expr.number
+    is Sum -> eval(expr.e1) + eval(expr.e2)
+    NotANumber -> Double.NaN
+}
+```
+
+<!--(The example above uses one additional new feature of Kotlin 1.1: the possibility for data classes to extend other
+classes, including sealed classes.)
+Note that classes which extend subclasses of a sealed class (indirect inheritors) can be placed anywhere, not necessarily in
+the same file.-->
+(Пример выше использует одну новую возможность Kotlin 1.1: расширение классов, включая изолированные, классами данных)
+Обратите внимание, что классы, которые расширяют наследников изолированного класса (непрямые наследники) могут быть помещены где угодно, не обязательно в том же файле.
+
+
+<!--The key benefit of using sealed classes comes into play when you use them in a [`when` expression](control-flow.html#when-expression). If it's possible to verify that the statement covers all cases, you don't need to add an `else` clause to the statement.-->
+
+Ключевое преимущество от использования изолированных классов проявляется тогда, когда вы используете их в [выражении when](control-flow.html#when-expression). Если возможно проверить что выражение покрывает все случаи, то вам не нужно добавлять `else`.
+
+``` kotlin
+fun eval(expr: Expr): Double = when(expr) {
+    is Expr.Const -> expr.number
+    is Expr.Sum -> eval(expr.e1) + eval(expr.e2)
+    Expr.NotANumber -> Double.NaN
+    // оператор `else` не требуется, потому что мы покрыли все возможные случаи
+}
+```
+
+--------------------------------------------------------------------------------
+
+<!--# This Expression-->
+# Ключевое слово this
+
+<!--To denote the current _receiver_, we use *this*{: .keyword } expressions:-->
+Чтобы сослаться на объект, с которым мы работаем, используется ключевое слово *this*:
+
+<!--* In a member of a [class](classes.html#inheritance), *this*{: .keyword } refers to the current object of that class
+* In an [extension function](extensions.html) or a [function literal with receiver](lambdas.html#function-literals-with-receiver),
+*this*{: .keyword } denotes the _receiver_ parameter that is passed on the left-hand side of a dot.-->
+* Внутри [класса](classes.html#inheritance) ключевое слово *this* ссылается на объект этого класса
+* В [функциях-расширениях](extensions.html) или в [литерале функции с принимающим объектом](lambdas.html#function-literals-with-receiver) *this* обозначает 
+_принимающий объект_, который передаётся слева от точки. 
+
+<!--If *this*{: .keyword } has no qualifiers, it refers to the _innermost enclosing scope_. 
+To refer to *this*{: .keyword } in other scopes, _label qualifiers_ are used:-->
+Если ключевое слово *this* не имеет определителей, то оно ссылается на _область самого глубокого замыкания_.
+Чтобы сослаться на *this* в одной из внешних областей, используются _метки-определители_:
+
+<!--## Qualified *this*{: .keyword }
+{:#qualified}-->
+## *this* с определителем
+
+<!--To access *this*{: .keyword } from an outer scope (a [class](classes.html), or [extension function](extensions.html),
+or labeled [function literal with receiver](lambdas.html#function-literals-with-receiver)) we write `this@label` where `@label` is a [label](returns.html)
+on the scope *this*{: .keyword } is meant to be from:-->
+
+Чтобы получить доступ к *this* из внешней области ([класса](classes.html), [функции-расширения](extensions.html),
+или именованных [литералов функций с принимающим объектом](lambdas.html#function-literals-with-receiver)) мы пишем `this@label`, где `@label` - это [метка](returns.html) области, из которой нужно получить *this*:
+
+``` kotlin
+class A { // неявная метка @A
+    inner class B { // неявная метка @B
+        fun Int.foo() { // неявная метка @foo
+            val a = this@A // this из A
+            val b = this@B // this из B
+
+            val c = this // принимающий объект функции foo(), типа Int
+            val c1 = this@foo // принимающий объект функции foo(), типа Int
+
+            val funLit = lambda@ fun String.() {
+                val d = this // принимающий объект литерала funLit
+            }
+
+
+            val funLit2 = { s: String ->
+                // принимающий объект функции foo(), т.к. замыкание лямбды не имеет принимающего объекта
+                val d1 = this
+            }
+        }
+    }
+}
+```
+
+
+--------------------------------------------------------------------------------
+
+<!--# Visibility Modifiers-->
+# Модификаторы доступа
+
+<!--Classes, objects, interfaces, constructors, functions, properties and their setters can have _visibility modifiers_.
+(Getters always have the same visibility as the property.) 
+There are four visibility modifiers in Kotlin: `private`, `protected`, `internal` and `public`.
+The default visibility, used if there is no explicit modifier, is `public`.-->
+Классы, объекты, интерфейсы, конструкторы, функции, свойства и их сеттеры могут иметь _модификаторы доступа_ (у геттеров всегда такая же видимость, как у свойств, к которым они относятся). В <b>Kotlin</b> предусмотрено четыре модификатора доступа: `private`, `protected`, `internal` и `public`. Если явно не используется никакого модификатора доступа, то по умолчанию применяется `public`.
+
+<!--Below please find explanations of these for different type of declaring scopes.-->
+Ниже вы найдёте описание всех возможных способов задавать область видимости.
+  
+<!--## Packages-->
+## Пакеты
+  
+<!--Functions, properties and classes, objects and interfaces can be declared on the "top-level", i.e. directly inside a package:-->
+Функции, свойства, классы, объекты и интерфейсы могут быть объявлены на самом "высоком уровне" прямо внутри пакета:
+  
+``` kotlin
+// имя файла: example.kt
+package foo
+
+fun baz() {}
+class Bar {}
+```
+
+<!--* If you do not specify any visibility modifier, `public` is used by default, which means that your declarations will be
+visible everywhere;
+* If you mark a declaration `private`, it will only be visible inside the file containing the declaration;
+* If you mark it `internal`, it is visible everywhere in the same [module](#modules);
+* `protected` is not available for top-level declarations.-->
+
+* Если вы не укажете никакого модификатора доступа, будет использован `public`. Это значит, что весь код данного объявления будет виден из космоса;
+* Если вы пометите объявление словом `private`, оно будет иметь видимость только внутри файла, где было объявлено;
+* Если вы используете `internal`, видимость будет распространяться на весь [модуль](visibility-modifiers.html#modules);
+* `protected` запрещено использовать в объявлениях "высокого уровня".
+
+<!--Examples:-->
+Примеры:
+
+``` kotlin
+// file name: example.kt
+package foo
+
+private fun foo() {} // имеет видимость внутри example.kt
+
+public var bar: Int = 5 // свойство видно со дна Марианской впадины
+    private set         // сеттер видно только внутри example.kt
+    
+internal val baz = 6    // имеет видимость внутри модуля
+```
+
+<!--## Classes and Interfaces-->
+## Классы и интерфейсы
+
+<!--For members declared inside a class:-->
+Для членов, объявленых в классе:
+
+<!--* `private` means visible inside this class only (including all its members);
+* `protected` --- same as `private` + visible in subclasses too;
+* `internal` --- any client *inside this module* who sees the declaring class sees its `internal` members;
+* `public` --- any client who sees the declaring class sees its `public` members.-->
+
+* `private` означает видимость только внутри этого класса (включая его членов);
+* `protected` --- то же самое, что и `private` + видимость в субклассах;
+* `internal` --- любой клиент *внутри модуля*, который видит объявленный класс, видит и его `internal` члены;
+* `public` --- любой клиент, который видит объявленный класс, видит его `public` члены.
+
+<!--*NOTE* for Java users: outer class does not see private members of its inner classes in Kotlin.-->
+> *Примечание для Java программистов:* в <b>Kotlin</b> внешний класс не видит `private` члены своих вложенных классов.
+
+<!--If you override a `protected` member and do not specify the visibility explicitly, the overriding member will also have `protected` visibility.-->
+Если вы переопределите `protected` член и явно не укажете его видимость, переопределённый элемент также будет иметь модификатор доступа `protected`.
+ 
+<!--Examples:-->
+Примеры:
+
+``` kotlin
+open class Outer {
+    private val a = 1
+    protected open val b = 2
+    internal val c = 3
+    val d = 4  // public по умолчанию
+    
+    protected class Nested {
+        public val e: Int = 5
+    }
+}
+
+class Subclass : Outer() {
+    // a не видно
+    // b, c и d видно
+    // класс Nested и e видно
+
+    override val b = 5   // 'b' - protected
+}
+
+class Unrelated(o: Outer) {
+    // o.a, o.b не видно
+    // o.c и o.d видно (тот же модуль)
+    // Outer.Nested не видно, и Nested::e также не видно
+}
+```
+
+<a name="constructors"></a>
+
+<!--### Constructors-->
+### Конструкторы
+
+<!--To specify a visibility of the primary constructor of a class, use the following syntax (note that you need to add an
+explicit *constructor*{: .keyword } keyword):-->
+Для указания видимости главного конструктора класса используется следующий синтаксис (кстати, надо добавить ключевое слово *constructor*):
+
+``` kotlin
+class C private constructor(a: Int) { ... }
+```
+
+<!--Here the constructor is private. By default, all constructors are `public`, which effectively
+amounts to them being visible everywhere where the class is visible (i.e. a constructor of an `internal` class is only 
+visible within the same module).-->
+В этом примере конструктор является `private`. По умолчанию все конструкторы имеют модификатор доступа `public`, то есть видны везде, где виден сам класс (а вот конструктор `internal` класса видно только в том же модуле).
+     
+<!--### Local declarations-->
+### Локальные объявления
+     
+<!--Local variables, functions and classes can not have visibility modifiers.-->
+Локальные переменные, функции и классы не могут иметь модификаторов доступа. <!--rcd27: неожиданно...-->
+
+<a name="modules"></a>
+
+<!--## Modules-->
+## Модули
+
+<!--The `internal` visibility modifier means that the member is visible with the same module. More specifically,
+a module is a set of Kotlin files compiled together:-->
+Модификатор доступа `internal` означает, что этот член видно в рамках его модуля. Модуль - это набор скомпилированных вместе <b>Kotlin</b> файлов:
+  
+  * модуль в IntelliJ IDEA;
+  * Maven или Gradle проект;
+  * набор скомпилированных вместе файлов с одним способом вызова `<kotlinc>` задачи в Ant.
+
+
+

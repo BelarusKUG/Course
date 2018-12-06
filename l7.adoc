@@ -1,0 +1,8 @@
+
+=== 7. Корутины
+
+* Что значит _suspendable_?
+* Отличия blocking от suspendable
+* Поддержка корутин в Kotlin
+* kotlinx.coroutines
+

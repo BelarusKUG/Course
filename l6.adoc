@@ -1,0 +1,8 @@
+
+=== 6. Kotlin DSL + Multiplatform
+
+* Kotlin DSL
+** Что такое DSL?
+** Где применяется
+** Создание своего собственного DSL
+* Multiplatform

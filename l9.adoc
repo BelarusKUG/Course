@@ -1,0 +1,27 @@
+
+=== 9. Экосистема Kotlin
+
+* Интеграция Kotlin в популярных фреймворках
+** https://github.com/gradle/kotlin-dsl[Gradle Kotlin DSL]
+** https://developer.android.com/kotlin/[Android SDK: Kotlin Support]
+*** https://developer.android.com/kotlin/ktx[Android KTX]
+*** https://github.com/Kotlin/anko[Anko]
+*** https://kotlinlang.org/docs/tutorials/android-plugin.html[Kotlin Android Extensions]
+** https://spring.io/blog/2016/02/15/developing-spring-boot-applications-with-kotlin[Spring Boot with Kotlin]
+* Популярные библиотеки
+** https://insert-koin.io/[Koin] - DI
+** https://github.com/cbeust/klaxon[Klaxon] - JSON parsing
+** Server
+*** https://ktor.io/[Ktor]
+*** http://sparkjava.com/[Spark]
+** Android
+*** https://github.com/permissions-dispatcher/PermissionsDispatcher[PermissionsDispatcher]
+** https://github.com/edvin/tornadofx[TornadoFX]
+** Testing
+*** https://spekframework.org/[Spek]
+*** https://mockk.io/[MockK]
+** https://kotlin.link/[Kotlin Links]
+* Tooling
+** https://arturbosch.github.io/detekt/[detekt]
+** https://github.com/shyiko/ktlint[Ktlint]
+** https://docs.sonarqube.org/display/PLUG/SonarKotlin[SonarQube Kotlin Plugin]
