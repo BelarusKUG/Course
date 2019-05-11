@@ -6,3 +6,29 @@
 * Написание Java кода для удобного использования из Kotlin
 * Отличия Kotlin от Java
 * Kotlin Java Bytecode IDEA Plugin
+
+== Puzzler
+
+[source,kotlin]
+----
+import java.lang.reflect.Proxy
+
+interface Foo {
+    fun bar(): String
+}
+
+class MyException : Exception()
+
+val foo = Proxy.newProxyInstance(
+    Foo::class.java.classLoader,
+    arrayOf(Foo::class.java)
+) { _, _, _ -> throw MyException() } as Foo
+
+fun main() {
+    try {
+        println(foo.bar())
+    } catch (t: MyException) {
+        println("Oops")
+    }
+}
+----
